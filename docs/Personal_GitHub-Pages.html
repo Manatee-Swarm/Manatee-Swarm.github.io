@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<!--
+	Massively by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Generic Page - Massively by HTML5 UP</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<a class="logo">Powershell Challenge</a>
+					</header>
+
+				<!-- Nav -->
+					<nav id="nav">
+						<ul class="links">
+							<li><a href="index.html">MSSA/Certifications</a></li>
+							<li class="active"><a href="self-study.html">Self-Study</a></li>
+							<li><a href="elements.html">Elements Reference</a></li>
+						</ul>
+						<ul class="icons">
+							<li><a href="https://www.linkedin.com/in/ben-sutton/" class="icon brands fa-linkedin"><span class="label">fa-linkedin</span></a></li>
+							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+						</ul>
+					</nav>
+
+				<!-- Main -->
+					<div id="main">
+
+						<!-- Post -->
+							<section class="post">
+								<header class="major">
+									<h3>Windows Server Challenge - Powershell Administration</h3>
+
+								</header>
+								<p>Overview - In this lab, you will be challenged with your understanding of PowerShell to manage and control your Windows computer.
+								<br/>
+								<p>Contoso Finance has recently begun a project to better understand what services and applications are running on their systems. Their management system is based around scripting and procedural steps while ensuring the staff can standard and repeatable steps of their systems. Therefore, they are electing to utilize default Windows PowerShell Modules and PowerShell scripting to administer their systems. They have reached out for assistance in developing and setting up commands and scripts for them to utilize.</p><br/>
+								<h2>Part 1</h2><hr/>
+
+								<b>List the commands used for services in the Management module - Count of services on the windows server - Command(s) to restart the print spooler service on the local computer</b><br/>
+								<i>From this, I need to list the commands that deal with services, count all the services, and be able to restart the print spooler.</i><br/><br/>
+								
+								<pre><code>
+help *-service
+# This uses the wild card to look at all the commands that end with '-service'.
+# Since PowerShell uses the Verb-Noun format in it's commands,
+# this will get all the actions that can be taken against the service module
+
+get-service.count
+# Runs Get-Service and then counts all the results
+
+restart-service Spooler
+# Restarts the Print Spooler, pretty self-explanitory
+								</code></pre>
+<br/><br/>
+								<h2>Part 2</h2><hr/>
+
+								<b>Use the Get-Service command to list services but filter out the results where the status is running directly from PowerShell commands. For the report of details for all the running services, in consideration of concise output, ensure that only these key fields are included in the output: - Name - Status - Startup Type - File Location!</b><br/>
+								<i>From this, I need to list all services that are running and get a list of specified details.</i><br/><br/>
+								
+								<pre><code>
+get-service | where Status -eq Running | format-table
+# Gets all running services
+
+Get-wmiobject win32_service | Where Status -eq Running | Select Name,Status,StartMode,PathName | Format-Table
+# Gets all running services, clears that list down to the ones that are running, and then shows the specified paramaters of that list
+								</code></pre><br/><br/>
+
+								<h2>Part 3</h2><hr/>
+
+								<b>You need to put the list of running services out to one file and the details need to be kept in a separate folder. The running services should be stored in HTML format so that it can be easily pulled into web status page. The details file should be stored in a JSON file so it is easy to work with later on. These folders need to keep different ones for each day for at least 30 days back in history. The output for this can be stored in a temporary folder or create a new folder for it, but there should be a consistant path for retrieving them.</b><br/>
+								<i>This is where it starts to get fun - The tasks I see are to store the running services in an HTML file, and store the details in a JSON file. Also need to be abe to retrieve files that are created within the past 30 days</i><br/><br/>
+								
+								<pre><code>
+param 
+(
+$HTMLPath = 'C:\Users\demouser\Desktop\HTMLLogs',
+$JSONPath = 'C:\Users\demouser\Desktop\JSONLogs'
+$Time = 'Get-Date -Format yyyymmdd_hhmmtt'
+)
+# These params are the paths that I will be saving the files to and a time-date variable for the date stamp
+# I always find that using paramaters makes my life easier. I'm lazy so I like to make params early and often so i have to type less. #SorryNotSorry
+
+if (-not (test-path $HTMLPath -pathtype any)){New-Item -path $HTMLPath -ItemType Directory}
+if (-not (test-path $JSONPath -pathtype any)){New-Item -path $JSONPath -ItemType Directory}
+# These blocks test to see if a folder has been created in the proposed directory and creates one if there isn't one already
+# This allows for a little more modularity and whoever is using this can change the params and still make things work
+
+get-service | where status -eq running | convertto-html | Out-File "$HTMLPath\HTMLLog-$time.html"
+get-wmiobject win32_service | select name,status,startmode,pathname | convertto-json | out-file "$JSONPath\JSONLog-$time.json"
+# This block takes the commands from Part 2 and saves them in the paths I declared earlier with a time stamp at the end
+
+Get-ChildItem -path $HTMLPath | ? { $_.CreationTime -ge (get-date).adddays(-30)}
+Get-ChildItem -path $JSONPath | ? { $_.CreationTime -ge (get-date).adddays(-30)}
+# This block checks to see all files that were created up to 30 days ago
+								</code></pre><br/><br/>
+
+								<h2>Part 4</h2><hr/>
+
+								<b>List the commands used for services in the Management module - Count of services on the windows server - Command(s) to restart the print spooler service on the local computer</b><br/>
+								<i>From this, I need to list the commands that deal with services, count all the services, and be able to restart the print spooler.</i><br/><br/>
+								
+								<pre><code>
+param 
+(
+$HTMLPath = 'C:\Users\demouser\Desktop\HTMLLogs',
+$JSONPath = 'C:\Users\demouser\Desktop\JSONLogs',
+$time = 'get-date -format yyymmdd_hhmmtt'
+)
+# Same thing as before, creating params to set paths that are going to be checked and setting a time-date variable
+
+if($CheckHTML = Get-ChildItem -path $htmlpath | ? { $_.CreationTime -eq (Get-Date)})
+{write-host "Great Success, files are here!"}
+else {write-host "Error: No files"}
+if($CheckJSON = Get-ChildItem -path $jsonPATH | ? { $_.CreationTime -eq (Get-Date)})
+{write-host "Great Success!"}
+Else {write-host "Error: No files here"}
+# Uses if statement to check the JSON and HTML paths to see is files are created today and gives a message depending if there's files or not
+
+$CheckSpooler = Get-ChildItem -path C:\Windows\System32\spool\PRINTERS\ | ? { $_.CreationTime -le (get-date).addhours(-6)}
+if ($CheckSpooler){restart-service spooler | write-output "Spooler hung & restarted"}
+# Making the $CheckSpooler veriable is a little unnessicary, but I think it makes the execution command easier to read and this is my code so I'm going to do what I want.
+								</code></pre><br/><br/>
+
+								<h2>Part 5</h2><hr/>
+
+								<b>These commands have been very successful and Contoso is happy with them. It is now important to encorporate these commands into usuable script files (PS1). In addition, it is best to use parameters to increase the flexibility of the files.</b><br/>
+								<i>From this, I need to create files with a paramater in place of the hard-coded location in the event somene wants to run this script and change the location. I also need to verify that the files were created in a folder for today</i><br/><br/>
+								
+								<pre><code>
+param 
+(
+$HTMLBasePath = 'C:\Users\demouser\Desktop\HTMLLogs',
+$JSONBasePath = 'C:\Users\demouser\Desktop\JSONLogs',
+)
+# Sets the base path for where directories are going to be created
+
+$day = (Get-Date -Format dd)
+$month = (Get-Date -format MM)
+$year = (Get-Date -format yy)
+$hour = (get-date -format hhmmtt)
+
+$HTMLPath = "$HTMLBasePath\Year 20$year\Month $Month\Day $Day"
+$JSONPath = "$JSONBasePath\Year 20$year\Month $Month\Day $Day"
+# Sets full path where files will be stored in a directory with sub-folders according to the date
+
+if (-not (test-path $HTMLPath -pathtype any)){New-Item -path $HTMLPath -ItemType Directory}
+if (-not (test-path $JSONPath -pathtype any)){New-Item -path $JSONPath -ItemType Directory}
+# Takes the specified path and check to see if a directory is there and creates one if not
+
+get-service | where status -eq running | convertto-html | Out-File "$HTMLPath\HTMLLog_$hour.html"
+get-wmiobject win32_service | select name,status,startmode,pathname | convertto-json | out-file "$JSONPath\JSONLog_$hour.json"
+Combines all of hte above by spitting out running services and details into their HTML and JSON directories respectively
+								</code></pre><br/><br/>
+
+								<h2>Part 6</h2><hr/>
+
+								<b>#Check for print spool files and if anything too old, restart the print spooler. Use a Paramater for the timeout length</b><br/>
+								<i>The prompt wants another script for the print spooler check so here's another block of code</i><br/><br/>
+								
+								<pre><code>
+param 
+(
+$SpoolTimeout = '(Get-Date).addhours(-6)',
+$RestartSpooler = 'Restart-Service Spooler',
+)
+# Sets the params for the code below, time is able to be changed if need be. 
+
+$CheckSpooler = 'Get-ChildItem -path C:\Windows\System32\spool\PRINTERS\ -recurse | ? { $_.CreationTime -le $SpoolTimeout}'
+if ($CheckSpooler){$RestartSpooler | write-output "Spooler hung & restarted"}
+#Essentially the same code as the first time I checked for files, but I added the paramater block for the age limit
+								</code></pre>
+
+							</section>
+
+					</div>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
